@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple 2D Shooter</title>
+    <style>
+        html, body { margin: 0; padding: 0; overflow: hidden; }
+        canvas { background: #202020; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const keys = {};
+let mouseX = 0;
+let mouseY = 0;
+const bullets = [];
+
+const player = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    radius: 20,
+    speed: 3,
+    angle: 0
+};
+
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+});
+
+canvas.addEventListener('mousedown', e => {
+    if (e.button === 0) {
+        bullets.push({
+            x: player.x,
+            y: player.y,
+            angle: player.angle,
+            speed: 5
+        });
+    }
+});
+
+function update() {
+    if (keys['w']) player.y -= player.speed;
+    if (keys['s']) player.y += player.speed;
+    if (keys['a']) player.x -= player.speed;
+    if (keys['d']) player.x += player.speed;
+
+    player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+
+    bullets.forEach(b => {
+        b.x += Math.cos(b.angle) * b.speed;
+        b.y += Math.sin(b.angle) * b.speed;
+    });
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(player.angle);
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.moveTo(player.radius, 0);
+    ctx.lineTo(-player.radius, -player.radius/2);
+    ctx.lineTo(-player.radius, player.radius/2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = 'orange';
+    bullets.forEach(b => {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
